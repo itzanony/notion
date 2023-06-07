@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Color-Changing Stopwatch</title>
+  <style>
+    /* Define styles for the stopwatch */
+    .stopwatch {
+      font-size: 24px;
+      text-align: center;
+      color: black;
+      background-color: white;
+      padding: 10px;
+    }
+    
+    /* Define styles for the color changes */
+    .color-change {
+      background-color: red;
+      transition: background-color 1s;
+    }
+  </style>
+</head>
+<body>
+  <div class="stopwatch">00:00:00</div>
+  
+  <script>
+    // Variables to store stopwatch data
+    let startTime;
+    let elapsedTime = 0;
+    let timerInterval;
+    let isRunning = false; // Track if the stopwatch is running or not
+    
+    // Function to start the stopwatch
+    function startStopwatch() {
+      if (!isRunning) {
+        startTime = Date.now() - elapsedTime;
+        timerInterval = setInterval(updateStopwatch, 10); // Update every 10 milliseconds
+        isRunning = true;
+      }
+    }
+    
+    // Function to update the stopwatch display
+    function updateStopwatch() {
+      const currentTime = Date.now();
+      elapsedTime = currentTime - startTime;
+      
+      const hours = Math.floor(elapsedTime / 3600000);
+      const minutes = Math.floor((elapsedTime % 3600000) / 60000);
+      const seconds = Math.floor((elapsedTime % 60000) / 1000);
+      const milliseconds = Math.floor(elapsedTime % 1000 / 10);
+      
+      const stopwatchDisplay = document.querySelector('.stopwatch');
+      stopwatchDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      
+      // Change color every hour
+      if (hours % 1 === 0 && minutes === 0 && seconds === 0 && milliseconds === 0) {
+        stopwatchDisplay.classList.toggle('color-change');
+      }
+    }
+    
+    // Function to pause the stopwatch
+    function pauseStopwatch() {
+      if (isRunning) {
+        clearInterval(timerInterval);
+        isRunning = false;
+      }
+    }
+    
+    // Function to resume the stopwatch
+    function resumeStopwatch() {
+      if (!isRunning) {
+        startTime = Date.now() - elapsedTime;
+        timerInterval = setInterval(updateStopwatch, 10); // Update every 10 milliseconds
+        isRunning = true;
+      }
+    }
+    
+    // Function to stop the stopwatch
+    function stopStopwatch() {
+      if (isRunning && elapsedTime > 0) {
+        clearInterval(timerInterval);
+        
+        // Log the duration to the Google Sheet
+        const duration = Math.floor(elapsedTime / 60000); // Duration in minutes
+        logDurationToSheet(duration);
+        
+        // Reset stopwatch data
+        startTime = null;
+        elapsedTime = 0;
+        isRunning = false;
+      }
+    }
+    
+    // Code to log the duration to the Google Sheets database
+    function logDurationToSheet(duration) {
+      const formData = new FormData();
+      formData.append('duration', duration);
+  
+      fetch('https://postend.vercel.app/n/gAAAAABkgMlXN6l0OceK1-oovFexZSsTroPoX75mTSYqSl8Qo1LZ9Ml3wtgHyMeZ1HdpDDz03TD4sQ19slKdVyoX6TQhdxqUFaBidEIMOmAEio1J9M1-UV-AAhrRUeYLaaoxqSxqcTIf3E_vCFgsQEe4PIwfyBEhvQirKeeiYPjgOqQ7ADrfhULLJISqZOYpngusE5aDaWYU', {
+        method: 'POST',
+        body: formData,
+      })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Duration logged successfully:', data);
+        })
+        .catch(error => {
+          console.error('Error logging duration:', error);
+        });
+    }
+  </script>
+  
+  <button onclick="startStopwatch()">Start</button>
+  <button onclick="pauseStopwatch()">Pause</button>
+  <button onclick="resumeStopwatch()">Resume</button>
+  <button onclick="stopStopwatch()">Stop</button>
+
+</body>
+</html>
