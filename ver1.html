@@ -11,8 +11,8 @@
       color: black;
       background-color: white;
       padding: 10px;
-      margin-top: 50px;
-      margin-bottom:100px;
+      margin-top: -14px;
+      margin-bottom: 100px;
     }
     
     /* Define styles for the color changes */
@@ -76,7 +76,7 @@
     }
   </style>
 </head>
-<body>
+<body style="margin: 0; height: 200px;">
   <div class="stopwatch">00:00:00</div>
   
   <div class="wrapper">
@@ -145,9 +145,10 @@
       if (isRunning && elapsedTime > 0) {
         clearInterval(timerInterval);
         
-        // Log the duration to the Google Sheet
+        // Log the duration and name to the Google Sheet
         const duration = Math.floor(elapsedTime / 60000); // Duration in minutes
-        logDurationToSheet(duration);
+        const name = 'Gaming';
+        logDataToSheet(duration, name);
         
         // Reset stopwatch data
         startTime = null;
@@ -157,10 +158,11 @@
       }
     }
     
-    // Code to log the duration to the Google Sheets database
-    function logDurationToSheet(duration) {
+    // Code to log the duration and name to the Google Sheets database
+    function logDataToSheet(duration, name) {
       const formData = new FormData();
       formData.append('duration', duration);
+      formData.append('name', name);
   
       fetch('https://postend.vercel.app/n/gAAAAABkgMlXN6l0OceK1-oovFexZSsTroPoX75mTSYqSl8Qo1LZ9Ml3wtgHyMeZ1HdpDDz03TD4sQ19slKdVyoX6TQhdxqUFaBidEIMOmAEio1J9M1-UV-AAhrRUeYLaaoxqSxqcTIf3E_vCFgsQEe4PIwfyBEhvQirKeeiYPjgOqQ7ADrfhULLJISqZOYpngusE5aDaWYU', {
         method: 'POST',
@@ -168,10 +170,10 @@
       })
         .then(response => response.json())
         .then(data => {
-          console.log('Duration logged successfully:', data);
+          console.log('Data logged successfully:', data);
         })
         .catch(error => {
-          console.error('Error logging duration:', error);
+          console.error('Error logging data:', error);
         });
     }
   </script>
