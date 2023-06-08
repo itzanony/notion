@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Color-Changing Stopwatch</title>
+  <style>
+    /* Define styles for the stopwatch */
+    .stopwatch {
+      font-size: 200px;
+      font-family: "Digital", sans-serif;
+      text-align: center;
+      color: black;
+      background-color: white;
+      padding: 10px;
+      margin-top: -14px;
+      margin-bottom: 100px;
+    }
+    
+    /* Define styles for the color changes */
+    .color-change {
+      background-color: red;
+      transition: background-color 1s;
+    }
+    
+    /* Define styles for the wrapper */
+    .wrapper {
+      position: relative;
+      padding: 10px;
+      left: 50%;
+      transform: translate(-50%, -225%);
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      background-color: white;
+    }
+    
+    /* Define styles for the buttons */
+    .wrapper a {
+      display: block;
+      width: 200px;
+      height: 40px;
+      line-height: 40px;
+      font-size: 18px;
+      font-family: sans-serif;
+      text-decoration: none;
+      color: #333;
+      border: 2px solid #333;
+      letter-spacing: 2px;
+      text-align: center;
+      position: relative;
+      transition: all .35s;
+    }
+    
+    .wrapper a span {
+      position: relative;
+      z-index: 2;
+    }
+    
+    .wrapper a:after {
+      position: absolute;
+      content: "";
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 100%;
+      background: #6a009b;
+      transition: all .35s;
+    }
+    
+    .wrapper a:hover {
+      color: #fff;
+      background-color: rgb(17, 255, 0);
+    }
+    
+    .wrapper a:hover:after {
+      width: 100%;
+    }
+  </style>
+</head>
+<body style="margin: 0; height: 200px;">
+  <div class="stopwatch">00:00:00</div>
+  
+  <div class="wrapper">
+    <a href="#" onclick="startStopwatch()"><span>Start</span></a>
+    <a href="#" onclick="resumeStopwatch()"><span>Resume</span></a>
+    <a href="#" onclick="pauseStopwatch()"><span>Pause</span></a>
+    <a href="#" onclick="stopStopwatch()"><span>Stop</span></a>
+  </div>
+  
+  <script>
+    // Variables to store stopwatch data
+    let startTime;
+    let elapsedTime = 0;
+    let timerInterval;
+    let isRunning = false; // Track if the stopwatch is running or not
+    let colorChanged = false; // Track if the color has changed
+    
+    // Function to start the stopwatch
+    function startStopwatch() {
+      if (!isRunning) {
+        startTime = Date.now() - elapsedTime;
+        timerInterval = setInterval(updateStopwatch, 10); // Update every 10 milliseconds
+        isRunning = true;
+      }
+    }
+    
+    // Function to update the stopwatch display
+    function updateStopwatch() {
+      const currentTime = Date.now();
+      elapsedTime = currentTime - startTime;
+      
+      const hours = Math.floor(elapsedTime / 3600000);
+      const minutes = Math.floor((elapsedTime % 3600000) / 60000);
+      const seconds = Math.floor((elapsedTime % 60000) / 1000);
+      const milliseconds = Math.floor(elapsedTime % 1000 / 10);
+      
+      const stopwatchDisplay = document.querySelector('.stopwatch');
+      stopwatchDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+      
+      // Change color after the first hour
+      if (hours >= 1 && !colorChanged) {
+        stopwatchDisplay.classList.add('color-change');
+        colorChanged = true;
+      }
+    }
+    
+    // Function to pause the stopwatch
+    function pauseStopwatch() {
+      if (isRunning) {
+        clearInterval(timerInterval);
+        isRunning = false;
+      }
+    }
+    
+    // Function to resume the stopwatch
+    function resumeStopwatch() {
+      if (!isRunning) {
+        startTime = Date.now() - elapsedTime;
+        timerInterval = setInterval(updateStopwatch, 10); // Update every 10 milliseconds
+        isRunning = true;
+      }
+    }
+    
+    // Function to stop the stopwatch
+    function stopStopwatch() {
+      if (isRunning && elapsedTime > 0) {
+        clearInterval(timerInterval);
+        
+        // Log the duration and name to the Google Sheet
+        const duration = Math.floor(elapsedTime / 60000); // Duration in minutes
+        const name = 'Working';
+        logDataToSheet(duration, name);
+        
+        // Reset stopwatch data
+        startTime = null;
+        elapsedTime = 0;
+        isRunning = false;
+        colorChanged = false;
+      }
+    }
+    
+    // Code to log the duration and name to the Google Sheets database
+    function logDataToSheet(duration, name) {
+      const formData = new FormData();
+      formData.append('duration', duration);
+      formData.append('name', name);
+  
+      fetch('https://postend.vercel.app/n/gAAAAABkgdQO_ws-4xzPAjKgaTjaN-QnF4lLm89OBaDrDvyQSD-8ureFAecf7o2de9kGAhoPHAue_BULgrbEkjyRMS7hXTFy6PFcfPqsuNrgVJUIS7a2QA2cT_fR6wcWpOAH68DjX0QmTPECeiHInSuu-zgznr1GpcvCAVBVXOxPit0Thqe_rBBrxDPj5mzH5ZNILXYO9IbH', {
+        method: 'POST',
+        body: formData,
+      })
+        .then(response => response.json())
+        .then(data => {
+          console.log('Data logged successfully:', data);
+        })
+        .catch(error => {
+          console.error('Error logging data:', error);
+        });
+    }
+  </script>
+</body>
+</html>
